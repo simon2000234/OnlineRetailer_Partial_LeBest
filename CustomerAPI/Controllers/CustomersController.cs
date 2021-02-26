@@ -97,8 +97,19 @@ namespace CustomerAPI.Controllers
             {
                 return NotFound();
             }
-;
-            service.UpdateCustomer(id, customer);
+
+            Customer privCust = new Customer()
+            {
+                Phone = customer.Phone,
+                ShippingAddress = customer.ShippingAddress,
+                Id = customer.Id,
+                BillingAddress = customer.BillingAddress,
+                CreditStanding = customer.CreditStanding,
+                Email = customer.Email,
+                Name = customer.Name
+            };
+            ;
+            service.UpdateCustomer(id, privCust);
             return new NoContentResult();
         }
 

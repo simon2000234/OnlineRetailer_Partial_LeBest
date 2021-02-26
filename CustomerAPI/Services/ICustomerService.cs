@@ -9,6 +9,6 @@ namespace CustomerAPI.Services
         void DeleteCustomer(int id);
         IEnumerable<Customer> GetAllCustomers();
         Customer GetCustomer(int id);
-       // Customer UpdateCustomer(int id, Customer customer);
+        Customer UpdateCustomer(int id, Customer customer);
     }
 }

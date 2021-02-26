@@ -7,5 +7,16 @@ namespace OrderApi.Models
         public DateTime? Date { get; set; }
         public int ProductId { get; set; }
         public int Quantity { get; set; }
+        public StatusEnum Status { get; set; }
+
+
+        public enum StatusEnum
+        {
+            Completed,
+            Canceled,
+            Shipped,
+            Paid,
+
+        }
     }
 }

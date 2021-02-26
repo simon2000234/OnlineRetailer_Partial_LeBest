@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OrderApi.Data;
 using OrderApi.Models;
+using OrderApi.Services;
 
 namespace OrderApi
 {
@@ -33,7 +34,8 @@ namespace OrderApi
 
             // Register repositories for dependency injection
             services.AddScoped<IRepository<Order>, OrderRepository>();
-
+            services.AddScoped<IOrderService, OrderService>();
+             
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();
 

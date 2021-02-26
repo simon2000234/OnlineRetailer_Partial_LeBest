@@ -1,21 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ProductApi.Data;
-using ProductApi.Models;
-using ProductApi.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using CustomerAPI.Data;
+using CustomerAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace ProductApi
+namespace CustomerAPI
 {
     public class Startup
     {
@@ -30,14 +29,14 @@ namespace ProductApi
         public void ConfigureServices(IServiceCollection services)
         {
             // In-memory database:
-            services.AddDbContext<ProductApiContext>(opt => opt.UseInMemoryDatabase("ProductsDb"));
+            services.AddDbContext<CustomerApiContext>(opt => opt.UseInMemoryDatabase("CustomersDb"));
 
             // Register repositories for dependency injection
-            services.AddScoped<IRepository<Product>, ProductRepository>();
-            services.AddScoped<ProductService>();
+            services.AddScoped<IRepository<Customer>, CustomerRepository>();
 
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();
+
 
             services.AddControllers();
             services.AddSwaggerGen();
@@ -51,7 +50,7 @@ namespace ProductApi
             {
                 // Initialize the database
                 var services = scope.ServiceProvider;
-                var dbContext = services.GetService<ProductApiContext>();
+                var dbContext = services.GetService<CustomerApiContext>();
                 var dbInitializer = services.GetService<IDbInitializer>();
                 dbInitializer.Initialize(dbContext);
             }
@@ -60,6 +59,7 @@ namespace ProductApi
             {
                 app.UseDeveloperExceptionPage();
             }
+
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
 

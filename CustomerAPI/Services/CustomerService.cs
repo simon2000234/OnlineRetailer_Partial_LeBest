@@ -29,21 +29,23 @@ namespace CustomerAPI.Services
             return repo.Add(customer);
         }
 
-      /*  public Customer UpdateCustomer(Customer modifiedCustomer, Customer customer)
+        public Customer UpdateCustomer(int OldCustomerId, Customer customerNewData)
         {
-         
 
-            modifiedCustomer.Name = customer.Name;
-            modifiedCustomer.Phone = customer.Phone;
-            modifiedCustomer.BillingAddress = customer.BillingAddress;
-            modifiedCustomer.CreditStanding = customer.CreditStanding;
-            modifiedCustomer.Email = customer.Email;
-            modifiedCustomer.ShippingAddress = customer.ShippingAddress;
+            var modifiedCustomer = GetCustomer(OldCustomerId);
+
+
+            modifiedCustomer.Name = customerNewData.Name;
+            modifiedCustomer.Phone = customerNewData.Phone;
+            modifiedCustomer.BillingAddress = customerNewData.BillingAddress;
+            modifiedCustomer.CreditStanding = customerNewData.CreditStanding;
+            modifiedCustomer.Email = customerNewData.Email;
+            modifiedCustomer.ShippingAddress = customerNewData.ShippingAddress;
 
             repo.Edit(modifiedCustomer);
             return modifiedCustomer;
 
-        }*/
+        }
 
         public void DeleteCustomer(int id)
         {

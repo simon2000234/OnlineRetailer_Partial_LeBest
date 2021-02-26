@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PublicModels;
 
 namespace OrderApi.Services
 {
@@ -35,7 +36,7 @@ namespace OrderApi.Services
             // before you can run the request.
             c.BaseUrl = new Uri("https://localhost:44396/products/");
             var request = new RestRequest(order.ProductId.ToString(), Method.GET);
-            var response = c.Execute<Product>(request);
+            var response = c.Execute<PublicProduct>(request);
             var orderedProduct = response.Data;
 
             if (order.Quantity <= orderedProduct.ItemsInStock - orderedProduct.ItemsReserved)

@@ -9,13 +9,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.0.7" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OrderApi\OrderApi.csproj" />
+    <ProjectReference Include="..\PublicModels\PublicModels.csproj" />
   </ItemGroup>
 
 

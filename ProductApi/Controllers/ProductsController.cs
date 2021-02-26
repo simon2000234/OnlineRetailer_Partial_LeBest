@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductApi.Data;
 using ProductApi.Models;
 using ProductApi.Services;
+using PublicModels;
 
 namespace ProductApi.Controllers
 {
@@ -21,32 +22,57 @@ namespace ProductApi.Controllers
 
         // GET products
         [HttpGet]
-        public IEnumerable<Product> Get()
+        public IEnumerable<PublicProduct> Get()
         {
-            return productService.GetAll();
+            var privateList = productService.GetAll();
+            List<PublicProduct> publicList = new List<PublicProduct>();
+            foreach (var prod in privateList)
+            {
+                PublicProduct pp = new PublicProduct
+                {
+                    Name = prod.Name, Category = prod.Category, Id = prod.Id, ItemsInStock = prod.ItemsInStock,
+                    ItemsReserved = prod.ItemsReserved, Price = prod.Price
+                };
+                publicList.Add(pp);
+            }
+
+            return publicList;
         }
 
         // GET products/5
         [HttpGet("{id}", Name="GetProduct")]
         public IActionResult Get(int id)
         {
-           var item = productService.Get(id);
+           var prod = productService.Get(id);
 
-            if (item == null)
+            if (prod == null)
             {
                 return NotFound();
             }
-            return new ObjectResult(item);
+
+            PublicProduct pp = new PublicProduct
+            {
+                Name = prod.Name, Category = prod.Category, Id = prod.Id, ItemsInStock = prod.ItemsInStock,
+                ItemsReserved = prod.ItemsReserved, Price = prod.Price
+            };
+            return new ObjectResult(pp);
         }
 
         // POST products
         [HttpPost]
-        public IActionResult Post([FromBody]Product product)
+        public IActionResult Post([FromBody]PublicProduct pubProduct)
         {
-            if (product == null)
+            if (pubProduct == null)
             {
                 return BadRequest();
             }
+
+            Product product = new Product
+            {
+                Category = pubProduct.Category, Name = pubProduct.Name, Id = pubProduct.Id,
+                ItemsInStock = pubProduct.ItemsInStock, ItemsReserved = pubProduct.ItemsReserved,
+                Price = pubProduct.Price
+            };
 
             var newProduct = productService.Add(product);
 
@@ -55,9 +81,10 @@ namespace ProductApi.Controllers
 
         // PUT products/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]Product product)
+        public IActionResult Put(int id, [FromBody]Product pubProduct)
         {
-            if (product == null || product.Id != id)
+
+            if (pubProduct == null || pubProduct.Id != id)
             {
                 return BadRequest();
             }
@@ -69,10 +96,10 @@ namespace ProductApi.Controllers
                 return NotFound();
             }
 
-            modifiedProduct.Name = product.Name;
-            modifiedProduct.Price = product.Price;
-            modifiedProduct.ItemsInStock = product.ItemsInStock;
-            modifiedProduct.ItemsReserved = product.ItemsReserved;
+            modifiedProduct.Name = pubProduct.Name;
+            modifiedProduct.Price = pubProduct.Price;
+            modifiedProduct.ItemsInStock = pubProduct.ItemsInStock;
+            modifiedProduct.ItemsReserved = pubProduct.ItemsReserved;
 
             productService.Edit(modifiedProduct);
             return new NoContentResult();

@@ -1,7 +1,6 @@
-﻿using System;
-namespace OrderApi.Models
+﻿namespace PublicModels
 {
-    public class Product
+    public class PublicProduct
     {
         public int Id { get; set; }
         public string Name { get; set; }

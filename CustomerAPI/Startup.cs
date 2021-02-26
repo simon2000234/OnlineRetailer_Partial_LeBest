@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using CustomerAPI.Data;
 using CustomerAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using CustomerAPI.Services;
 
 namespace CustomerAPI
 {
@@ -26,10 +27,11 @@ namespace CustomerAPI
 
             // Register repositories for dependency injection
             services.AddScoped<IRepository<Customer>, CustomerRepository>();
+            services.AddScoped<ICustomerService, CustomerService>();
 
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();
-
+            
 
             services.AddControllers();
             services.AddSwaggerGen();

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CustomerAPI.Data;
 using CustomerAPI.Models;
 using PublicModels;
+using CustomerAPI.Services;
 
 namespace CustomerAPI.Controllers
 {
@@ -13,17 +14,17 @@ namespace CustomerAPI.Controllers
     [Route("[controller]")]
     public class CustomersController : Controller
     {
-        private readonly IRepository<Customer> repo;
+        private readonly ICustomerService service;
 
-        public CustomersController(IRepository<Customer> repos)
+        public CustomersController(ICustomerService service)
         {
-            repo = repos;
+            this.service = service;
         }
 
         [HttpGet]
-        public IEnumerable<Customer> Get()
+        public IEnumerable<PublicCustomer> Get()
         {
-            List<Customer> privateCustomers = repo.GetAll().ToList();
+            List<Customer> privateCustomers = service.GetAllCustomers().ToList();
             List<PublicCustomer> publicCustomers = new List<PublicCustomer>();
             foreach (var item in privateCustomers)
             {
@@ -40,13 +41,13 @@ namespace CustomerAPI.Controllers
                 publicCustomers.Add(pubCust);
             }
 
-            return repo.GetAll();
+            return publicCustomers;
         }
 
         [HttpGet("{id}", Name = "GetCustomer")]
         public IActionResult Get(int id)
         {
-            var item = repo.Get(id);
+            var item = service.GetCustomer(id);
             if (item == null)
             {
                 return NotFound();
@@ -77,7 +78,7 @@ namespace CustomerAPI.Controllers
                 Email = customer.Email, Name = customer.Name
             };
 
-            var newCustomer = repo.Add(privCust);
+            var newCustomer = service.CreateCustomer(privCust);
 
             return CreatedAtRoute("GetCustomer", new { id = newCustomer.Id }, newCustomer);
         }
@@ -91,7 +92,7 @@ namespace CustomerAPI.Controllers
                 return BadRequest();
             }
 
-            var modifiedProduct = repo.Get(id);
+            var modifiedProduct = service.GetCustomer(id);
 
             if (modifiedProduct == null)
             {
@@ -105,19 +106,19 @@ namespace CustomerAPI.Controllers
             modifiedProduct.Email = customer.Email;
             modifiedProduct.ShippingAddress = customer.ShippingAddress;
 
-            repo.Edit(modifiedProduct);
+            service.UpdateCustomer(modifiedProduct);
             return new NoContentResult();
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (repo.Get(id) == null)
+            if (service.GetCustomer(id) == null)
             {
                 return NotFound();
             }
 
-            repo.Remove(id);
+            service.DeleteCustomer(id);
             return new NoContentResult();
         }
     }

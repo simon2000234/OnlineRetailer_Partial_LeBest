@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using OrderApi.Models;
@@ -22,7 +23,7 @@ namespace OrderApi.Controllers
 
         // GET: orders
         [HttpGet]
-        public IEnumerable<Order> Get()
+        public IEnumerable<PublicOrder> Get()
         {
             var privateOrders = orderService.GetAllOrders();
             List<PublicOrder> publicOrders = new List<PublicOrder>();
@@ -34,9 +35,10 @@ namespace OrderApi.Controllers
                     Date = order.Date, Id = order.Id, ProductId = order.ProductId, Quantity = order.Quantity,
                     Status = order.Status
                 };
+                publicOrders.Add(publicOrder);
             }
 
-            return orderService.GetAllOrders();
+            return publicOrders;
         }
 
         // GET orders/5

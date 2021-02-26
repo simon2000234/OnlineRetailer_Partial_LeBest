@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProductApi.Services
 {
-    public class ProductService : IRepository<Product>
+    public class ProductService : IProductService
     {
         private readonly IRepository<Product> repository;
         public ProductService(IRepository<Product> repos)
@@ -29,7 +29,7 @@ namespace ProductApi.Services
         public Product Get(int id)
         {
             return repository.Get(id);
-         
+
         }
 
         public IEnumerable<Product> GetAll()

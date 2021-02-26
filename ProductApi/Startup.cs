@@ -34,7 +34,7 @@ namespace ProductApi
 
             // Register repositories for dependency injection
             services.AddScoped<IRepository<Product>, ProductRepository>();
-            services.AddScoped<ProductService>();
+            services.AddScoped<IProductService,ProductService>();
 
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();

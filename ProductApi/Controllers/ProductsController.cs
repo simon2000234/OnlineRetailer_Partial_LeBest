@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProductApi.Data;
 using ProductApi.Models;
+using ProductApi.Services;
 
 namespace ProductApi.Controllers
 {
@@ -9,25 +10,28 @@ namespace ProductApi.Controllers
     [Route("[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly IRepository<Product> repository;
+        private readonly ProductService productService;
 
-        public ProductsController(IRepository<Product> repos)
+        public ProductsController( ProductService productService)
         {
-            repository = repos;
+           
+            this.productService = productService;
+
         }
 
         // GET products
         [HttpGet]
         public IEnumerable<Product> Get()
         {
-            return repository.GetAll();
+            return productService.GetAll();
         }
 
         // GET products/5
         [HttpGet("{id}", Name="GetProduct")]
         public IActionResult Get(int id)
         {
-            var item = repository.Get(id);
+           var item = productService.Get(id);
+
             if (item == null)
             {
                 return NotFound();
@@ -44,7 +48,7 @@ namespace ProductApi.Controllers
                 return BadRequest();
             }
 
-            var newProduct = repository.Add(product);
+            var newProduct = productService.Add(product);
 
             return CreatedAtRoute("GetProduct", new { id = newProduct.Id }, newProduct);
         }
@@ -58,7 +62,7 @@ namespace ProductApi.Controllers
                 return BadRequest();
             }
 
-            var modifiedProduct = repository.Get(id);
+            var modifiedProduct = productService.Get(id);
 
             if (modifiedProduct == null)
             {
@@ -70,7 +74,7 @@ namespace ProductApi.Controllers
             modifiedProduct.ItemsInStock = product.ItemsInStock;
             modifiedProduct.ItemsReserved = product.ItemsReserved;
 
-            repository.Edit(modifiedProduct);
+            productService.Edit(modifiedProduct);
             return new NoContentResult();
         }
 
@@ -78,12 +82,12 @@ namespace ProductApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (repository.Get(id) == null)
+            if (productService.Get(id) == null)
             {
                 return NotFound();
             }
 
-            repository.Remove(id);
+            productService.Remove(id);
             return new NoContentResult();
         }
     }

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ProductApi.Data;
 using ProductApi.Models;
+using ProductApi.Services;
 
 namespace ProductApi
 {
@@ -33,6 +34,7 @@ namespace ProductApi
 
             // Register repositories for dependency injection
             services.AddScoped<IRepository<Product>, ProductRepository>();
+            services.AddScoped<ProductService>();
 
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();

@@ -51,7 +51,7 @@ namespace CustomerAPI.Controllers
         }
 
 
-       /* [HttpPut("{id}")]
+        [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] Customer customer)
         {
             if (customer == null || customer.Id != id)
@@ -59,21 +59,12 @@ namespace CustomerAPI.Controllers
                 return BadRequest();
             }
 
-            var modifiedProduct = service.GetCustomer(id);
-
-            if (modifiedProduct == null)
+            if (service.GetCustomer(id) == null)
             {
                 return NotFound();
             }
-
-            modifiedProduct.Name = customer.Name;
-            modifiedProduct.Phone = customer.Phone;
-            modifiedProduct.BillingAddress = customer.BillingAddress;
-            modifiedProduct.CreditStanding = customer.CreditStanding;
-            modifiedProduct.Email = customer.Email;
-            modifiedProduct.ShippingAddress = customer.ShippingAddress;
-
-            service.UpdateCustomer(modifiedProduct);
+;
+            service.UpdateCustomer(id, customer);
             return new NoContentResult();
         }
 
@@ -87,6 +78,6 @@ namespace CustomerAPI.Controllers
 
             service.DeleteCustomer(id);
             return new NoContentResult();
-        }*/
+        }
     }
 }

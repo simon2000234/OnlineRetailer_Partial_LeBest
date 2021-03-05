@@ -2,6 +2,7 @@
 using System.Linq;
 using OrderApi.Models;
 using System;
+using PublicModels;
 
 namespace OrderApi.Data
 {
@@ -21,7 +22,7 @@ namespace OrderApi.Data
 
             List<Order> orders = new List<Order>
             {
-                new Order { Date = DateTime.Today, ProductId = 1, Quantity = 2 , Status=Order.StatusEnum.Shipped}
+                new Order { Date = DateTime.Today, ProductId = 1, Quantity = 2 , Status=PublicOrder.StatusEnum.Shipped}
             };
 
             context.Orders.AddRange(orders);

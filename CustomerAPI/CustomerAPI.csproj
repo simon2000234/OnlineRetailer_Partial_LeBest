@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>c3bcb462-6f48-4d62-8c9a-383af1b49fe0</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.0.7" />

@@ -11,12 +11,13 @@ namespace OrderApi.Models
         public Order Convert(OrderDTO sharedOrder)
         {
             var convertedOrderLine = new List<OrderLine>();
-
-            foreach (var orderLine in sharedOrder.OrderLines)
+            if (sharedOrder.OrderLines != null)
             {
-                convertedOrderLine.Add(ConvertOderLine(orderLine));
+                foreach (var orderLine in sharedOrder.OrderLines)
+                {
+                    convertedOrderLine.Add(ConvertOderLine(orderLine));
+                }
             }
-
             return new Order
             {
                 Id = sharedOrder.Id,
@@ -31,10 +32,15 @@ namespace OrderApi.Models
         {
             var convertedOrderLineDTO = new List<OrderLineDTO>();
 
-            foreach (var orderLine in hiddenOrder.OrderLines)
+            if (hiddenOrder.OrderLines != null)
             {
-                convertedOrderLineDTO.Add(ConvertOderLine(orderLine));
+                foreach (var orderLine in hiddenOrder.OrderLines)
+                {
+
+                    convertedOrderLineDTO.Add(ConvertOderLine(orderLine));
+                }
             }
+            
 
             return new OrderDTO
             {

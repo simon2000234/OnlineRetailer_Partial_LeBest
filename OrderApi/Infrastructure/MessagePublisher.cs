@@ -19,7 +19,7 @@ namespace OrderApi.Infrastructure
             bus.Dispose();
         }
 
-        public void PublishOrderStatusChangedMessage(int? customerId, IList<OrderLine> orderLines, string topic)
+        public void PublishOrderStatusChangedMessage(int? customerId, IList<OrderLineDTO> orderLines, string topic)
         {
             var message = new OrderStatusChangedMessage
             { 

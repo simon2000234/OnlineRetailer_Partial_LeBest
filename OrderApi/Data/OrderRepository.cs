@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using SharedModels;
 using System;
+using OrderApi.Models;
 
 namespace OrderApi.Data
 {

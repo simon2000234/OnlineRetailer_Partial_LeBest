@@ -6,7 +6,7 @@ using SharedModels;
 
 namespace OrderApi.Models
 {
-    public class OrderConverter
+    public class OrderConverter : IConverter<Order, OrderDTO>
     {
         public Order Convert(OrderDTO sharedOrder)
         {
@@ -14,7 +14,7 @@ namespace OrderApi.Models
 
             foreach (var orderLine in sharedOrder.OrderLines)
             {
-                convertedOrderLine.Add(Convert(orderLine));
+                convertedOrderLine.Add(ConvertOderLine(orderLine));
             }
 
             return new Order
@@ -33,7 +33,7 @@ namespace OrderApi.Models
 
             foreach (var orderLine in hiddenOrder.OrderLines)
             {
-                convertedOrderLineDTO.Add(Convert(orderLine));
+                convertedOrderLineDTO.Add(ConvertOderLine(orderLine));
             }
 
             return new OrderDTO
@@ -46,7 +46,7 @@ namespace OrderApi.Models
             };
         }
 
-        public OrderLine Convert(OrderLineDTO sharedOrderLine)
+        public OrderLine ConvertOderLine(OrderLineDTO sharedOrderLine)
         {
             return new OrderLine
             {
@@ -57,7 +57,7 @@ namespace OrderApi.Models
             };
         }
 
-        public OrderLineDTO Convert(OrderLine hiddenOrderLine)
+        public OrderLineDTO ConvertOderLine(OrderLine hiddenOrderLine)
         {
             return new OrderLineDTO
             {

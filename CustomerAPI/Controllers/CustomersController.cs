@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CustomerAPI.Data;
 using CustomerAPI.Models;
 using CustomerAPI.Services;
-using PublicModels;
+using SharedModels;
 
 namespace CustomerAPI.Controllers
 {

@@ -29,9 +29,13 @@ namespace ProductApi.Infrastructure
                 bus.PubSub.Subscribe<OrderStatusChangedMessage>("productApiHkCompleted", 
                     HandleOrderCompleted, x => x.WithTopic("completed"));
 
+                bus.PubSub.Subscribe<OrderStatusChangedMessage>("productApiCancelled",
+                    HandleOrderCancelled, x => x.WithTopic("cancelled"));
+
+                bus.PubSub.Subscribe<OrderStatusChangedMessage>("productApiShipped",
+                    HandleOrderShipped, x => x.WithTopic("shipped"));
+
                 // Add code to subscribe to other OrderStatusChanged events:
-                // * cancelled
-                // * shipped
                 // * paid
                 // Implement an event handler for each of these events.
                 // Be careful that each subscribe has a unique subscription id
@@ -46,6 +50,45 @@ namespace ProductApi.Infrastructure
                 }
             }
 
+        }
+
+        private void HandleOrderShipped(OrderStatusChangedMessage message)
+        {
+            using (var scope = provider.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var productRepos = services.GetService<IRepository<Product>>();
+
+                // Reserve items of ordered product (should be a single transaction).
+                // Beware that this operation is not idempotent.
+                foreach (var orderLine in message.OrderLines)
+                {
+                    var product = productRepos.Get(orderLine.ProductId);
+
+                    product.ItemsReserved = product.ItemsReserved - orderLine.Quantity; // Items are shipped, therefore nolonger reserved.
+                    product.ItemsInStock = product.ItemsInStock - orderLine.Quantity; // Items are shipped, therefore they are removed from the amount in stock
+
+                    productRepos.Edit(product);
+                }
+            }
+        }
+
+        private void HandleOrderCancelled(OrderStatusChangedMessage message)
+        {
+            using (var scope = provider.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var productRepos = services.GetService<IRepository<Product>>();
+
+                // Reserve items of ordered product (should be a single transaction).
+                // Beware that this operation is not idempotent.
+                foreach (var orderLine in message.OrderLines)
+                {
+                    var product = productRepos.Get(orderLine.ProductId);
+                    product.ItemsReserved = product.ItemsReserved - orderLine.Quantity;
+                    productRepos.Edit(product);
+                }
+            }
         }
 
         private void HandleOrderCompleted(OrderStatusChangedMessage message)

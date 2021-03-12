@@ -110,9 +110,38 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/cancel")]
         public IActionResult Cancel(int id)
         {
-            throw new NotImplementedException();
 
-            // Add code to implement this method.
+            var order = repository.Get(id);
+
+            if(order == null)
+            {
+                return NotFound();
+            }
+
+            var newStatus = Order.OrderStatus.cancelled;
+            if(newStatus == order.Status)
+            {
+                return new NoContentResult();
+            }
+
+            if(order.Status != Order.OrderStatus.completed)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var orderDTO = orderConverter.Convert(order);
+                messagePublisher.PublishOrderStatusChangedMessage(
+                    orderDTO.customerId, orderDTO.OrderLines, "cancelled");
+
+                order.Status = newStatus;
+                repository.Edit(order);
+                return new NoContentResult();
+            } catch
+            {
+                return StatusCode(500, "Something went wrong :(");
+            }
         }
 
         // PUT orders/5/ship
@@ -121,9 +150,37 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/ship")]
         public IActionResult Ship(int id)
         {
-            throw new NotImplementedException();
+            var order = repository.Get(id);
 
-            // Add code to implement this method.
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            var newStatus = Order.OrderStatus.shipped;
+            if (newStatus == order.Status)
+            {
+                return new NoContentResult();
+            }
+
+            if(order.Status != Order.OrderStatus.completed)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var orderDTO = orderConverter.Convert(order);
+                messagePublisher.PublishOrderStatusChangedMessage(
+                    orderDTO.customerId, orderDTO.OrderLines, "shipped");
+
+                order.Status = newStatus;
+                repository.Edit(order);
+                return new NoContentResult();
+            } catch
+            {
+                return StatusCode(500, "Something went wrong :(");
+            }
         }
 
         // PUT orders/5/pay

@@ -1,4 +1,4 @@
-﻿namespace PublicModels
+﻿namespace SharedModels
 {
     public class PublicCustomer
     {

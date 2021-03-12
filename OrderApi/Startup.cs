@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
+using OrderApi.Models;
 using SharedModels;
 
 namespace OrderApi
@@ -50,6 +51,9 @@ namespace OrderApi
             // Register MessagePublisher (a messaging gateway) for dependency injection
             services.AddSingleton<IMessagePublisher>(new
                 MessagePublisher(cloudAMQPConnectionString));
+
+            // Register OrderConverter for dependency injection
+            services.AddSingleton<IConverter<Order, OrderDTO>, OrderConverter>();
 
             services.AddControllers();
         }

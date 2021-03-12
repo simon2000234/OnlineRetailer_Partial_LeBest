@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
+using OrderApi.Models;
 using SharedModels;
 
 namespace OrderApi.Controllers
@@ -11,24 +12,33 @@ namespace OrderApi.Controllers
     [Route("[controller]")]
     public class OrdersController : ControllerBase
     {
+        private readonly IConverter<Order, OrderDTO> orderConverter;
         IOrderRepository repository;
         IServiceGateway<ProductDto> productServiceGateway;
         IMessagePublisher messagePublisher;
 
         public OrdersController(IRepository<Order> repos,
             IServiceGateway<ProductDto> gateway,
-            IMessagePublisher publisher)
+            IMessagePublisher publisher, IConverter<Order, OrderDTO> converter)
         {
             repository = repos as IOrderRepository;
             productServiceGateway = gateway;
             messagePublisher = publisher;
+            orderConverter = converter;
         }
 
         // GET orders
         [HttpGet]
-        public IEnumerable<Order> Get()
+        public IEnumerable<OrderDTO> Get()
         {
-            return repository.GetAll();
+            var orderDTOList = new List<OrderDTO>();
+            foreach(var order in repository.GetAll())
+            {
+                var orderDTO = orderConverter.Convert(order);
+                orderDTOList.Add(orderDTO);
+            }
+
+            return orderDTOList;
         }
 
         // GET orders/5
@@ -45,12 +55,13 @@ namespace OrderApi.Controllers
 
         // POST orders
         [HttpPost]
-        public IActionResult Post([FromBody]Order order)
+        public IActionResult Post([FromBody]OrderDTO order)
         {
             if (order == null)
             {
                 return BadRequest();
             }
+            //Order order = orderConverter.Convert(orderShared);
 
             if (ProductItemsAvailable(order))
             {
@@ -62,8 +73,9 @@ namespace OrderApi.Controllers
                         order.customerId, order.OrderLines, "completed");
 
                     // Create order.
-                    order.Status = Order.OrderStatus.completed;
-                    var newOrder = repository.Add(order);
+                    order.Status = OrderDTO.OrderStatus.completed;
+                    
+                    var newOrder = repository.Add(orderConverter.Convert(order));
                     return CreatedAtRoute("GetOrder", new { id = newOrder.Id }, newOrder);
                 }
                 catch
@@ -78,7 +90,7 @@ namespace OrderApi.Controllers
             }
         }
 
-        private bool ProductItemsAvailable(Order order)
+        private bool ProductItemsAvailable(OrderDTO order)
         {
             foreach (var orderLine in order.OrderLines)
             {
@@ -98,9 +110,38 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/cancel")]
         public IActionResult Cancel(int id)
         {
-            throw new NotImplementedException();
 
-            // Add code to implement this method.
+            var order = repository.Get(id);
+
+            if(order == null)
+            {
+                return NotFound();
+            }
+
+            var newStatus = Order.OrderStatus.cancelled;
+            if(newStatus == order.Status)
+            {
+                return new NoContentResult();
+            }
+
+            if(order.Status != Order.OrderStatus.completed)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var orderDTO = orderConverter.Convert(order);
+                messagePublisher.PublishOrderStatusChangedMessage(
+                    orderDTO.customerId, orderDTO.OrderLines, "cancelled");
+
+                order.Status = newStatus;
+                repository.Edit(order);
+                return new NoContentResult();
+            } catch
+            {
+                return StatusCode(500, "Something went wrong :(");
+            }
         }
 
         // PUT orders/5/ship
@@ -109,9 +150,37 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/ship")]
         public IActionResult Ship(int id)
         {
-            throw new NotImplementedException();
+            var order = repository.Get(id);
 
-            // Add code to implement this method.
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            var newStatus = Order.OrderStatus.shipped;
+            if (newStatus == order.Status)
+            {
+                return new NoContentResult();
+            }
+
+            if(order.Status != Order.OrderStatus.completed)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var orderDTO = orderConverter.Convert(order);
+                messagePublisher.PublishOrderStatusChangedMessage(
+                    orderDTO.customerId, orderDTO.OrderLines, "shipped");
+
+                order.Status = newStatus;
+                repository.Edit(order);
+                return new NoContentResult();
+            } catch
+            {
+                return StatusCode(500, "Something went wrong :(");
+            }
         }
 
         // PUT orders/5/pay

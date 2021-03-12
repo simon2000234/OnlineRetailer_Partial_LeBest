@@ -4,7 +4,7 @@ using SharedModels;
 
 namespace OrderApi.Infrastructure
 {
-    public class ProductServiceGateway : IServiceGateway<ProductDto>
+    public class ProductServiceGateway : IProductServiceGateway<ProductDto>
     {
         Uri productServiceBaseUrl;
 
@@ -22,6 +22,16 @@ namespace OrderApi.Infrastructure
             var response = c.Execute<ProductDto>(request);
             var orderedProduct = response.Data;
             return orderedProduct;
+        }
+
+        public bool CheckFunds(CheckPriceMessage cpm)
+        {
+            RestClient c = new RestClient();
+            c.BaseUrl = productServiceBaseUrl;
+            var request = new RestRequest("CheckPrice", Method.POST, DataFormat.Json);
+            request.AddJsonBody(cpm);
+            var response = c.Execute<bool>(request);
+            return response.Data;
         }
     }
 }

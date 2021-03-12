@@ -46,10 +46,10 @@ namespace OrderApi
             services.AddTransient<IDbInitializer, DbInitializer>();
 
             // Register product service gateway for dependency injection
-            services.AddSingleton<IServiceGateway<ProductDto>>(new
+            services.AddSingleton<IProductServiceGateway<ProductDto>>(new
                 ProductServiceGateway(productServiceBaseUrl));
 
-            services.AddSingleton<IServiceGateway<PublicCustomer>>(new CustomerServiceGateway(customerServiceBaseUrl));
+            services.AddSingleton<ICustomerServiceGateway<PublicCustomer>>(new CustomerServiceGateway(customerServiceBaseUrl));
 
             // Register MessagePublisher (a messaging gateway) for dependency injection
             services.AddSingleton<IMessagePublisher>(new

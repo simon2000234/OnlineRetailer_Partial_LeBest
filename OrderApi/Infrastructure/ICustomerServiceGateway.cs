@@ -1,6 +1,6 @@
 ﻿namespace OrderApi.Infrastructure
 {
-    public interface IServiceGateway<T>
+    public interface ICustomerServiceGateway<T>
     {
         T Get(int id);
     }

@@ -62,6 +62,27 @@ namespace ProductApi.Controllers
                     productConverter.Convert(newProduct));
         }
 
+
+        [HttpPost("CheckPrice")]
+        public IActionResult CheckPrice([FromBody] CheckPriceMessage cpm)
+        {
+            decimal totalPrice = 0;
+
+            foreach (var orderLine in cpm.OrderLines)
+            {
+                decimal itemPrice = repository.Get(orderLine.ProductId).Price;
+                totalPrice += (itemPrice * orderLine.Quantity);
+            }
+
+            if (totalPrice > cpm.FundsAvailable)
+            {
+                return new ObjectResult(false);
+            }
+
+            
+            return new ObjectResult(true);
+
+        }
         // PUT products/5
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody]ProductDto productDto)

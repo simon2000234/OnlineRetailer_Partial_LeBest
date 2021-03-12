@@ -14,13 +14,13 @@ namespace OrderApi.Controllers
     {
         private readonly IConverter<Order, OrderDTO> orderConverter;
         IOrderRepository repository;
-        IServiceGateway<ProductDto> productServiceGateway;
+        IProductServiceGateway<ProductDto> productServiceGateway;
         IMessagePublisher messagePublisher;
-        IServiceGateway<PublicCustomer> customerServiceGateway;
+        ICustomerServiceGateway<PublicCustomer> customerServiceGateway;
 
         public OrdersController(IRepository<Order> repos,
-            IServiceGateway<ProductDto> gateway,
-            IMessagePublisher publisher, IConverter<Order, OrderDTO> converter, IServiceGateway<PublicCustomer> customerServiceGateway)
+            IProductServiceGateway<ProductDto> gateway,
+            IMessagePublisher publisher, IConverter<Order, OrderDTO> converter, ICustomerServiceGateway<PublicCustomer> customerServiceGateway)
         {
             repository = repos as IOrderRepository;
             productServiceGateway = gateway;
@@ -100,13 +100,19 @@ namespace OrderApi.Controllers
             }
             try
             {
-               customerServiceGateway.Get(order.customerId.Value);
+               var customer = customerServiceGateway.Get(order.customerId.Value);
+
+               CheckPriceMessage cpm = new CheckPriceMessage {FundsAvailable = customer.CreditStanding, OrderLines = order.OrderLines};
+
+               var fundsAvailable = productServiceGateway.CheckFunds(cpm);
+
+               return fundsAvailable;
+
             }
             catch (Exception)
             {
                 return false;
             }
-            return true;
 
         }
 

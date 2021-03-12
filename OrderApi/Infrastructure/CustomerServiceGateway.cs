@@ -4,7 +4,7 @@ using SharedModels;
 
 namespace OrderApi.Infrastructure
 {
-    public class CustomerServiceGateway: IServiceGateway<PublicCustomer>
+    public class CustomerServiceGateway: ICustomerServiceGateway<PublicCustomer>
     {
         private Uri customerServiceBaseUrl;
         public CustomerServiceGateway(Uri customerServiceBaseUrl)

@@ -8,6 +8,6 @@
         public string Phone { get; set; }
         public string BillingAddress { get; set; }
         public string ShippingAddress { get; set; }
-        public int CreditStanding { get; set; }
+        public decimal CreditStanding { get; set; }
     }
 }

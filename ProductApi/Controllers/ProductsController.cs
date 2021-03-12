@@ -45,6 +45,7 @@ namespace ProductApi.Controllers
             return new ObjectResult(productDto);
         }
 
+
         // POST products
         [HttpPost]
         public IActionResult Post([FromBody]ProductDto productDto)

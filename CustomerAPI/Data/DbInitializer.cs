@@ -20,7 +20,7 @@ namespace CustomerAPI.Data
 
             List<Customer> orders = new List<Customer>
             {
-                new Customer { Id = 1, BillingAddress = "Hvor din mor bor", CreditStanding = 100, Email = "Chad@email.com", Name = "Chad Chadsen", Phone = "+45-42069420", ShippingAddress = "The Chad Cave"}
+                new Customer { Id = 1, BillingAddress = "Hvor din mor bor", CreditStanding = 400, Email = "Chad@email.com", Name = "Chad Chadsen", Phone = "+45-42069420", ShippingAddress = "The Chad Cave"}
             };
 
             context.Customers.AddRange(orders);

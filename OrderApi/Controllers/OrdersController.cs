@@ -16,15 +16,17 @@ namespace OrderApi.Controllers
         IOrderRepository repository;
         IServiceGateway<ProductDto> productServiceGateway;
         IMessagePublisher messagePublisher;
+        IServiceGateway<PublicCustomer> customerServiceGateway;
 
         public OrdersController(IRepository<Order> repos,
             IServiceGateway<ProductDto> gateway,
-            IMessagePublisher publisher, IConverter<Order, OrderDTO> converter)
+            IMessagePublisher publisher, IConverter<Order, OrderDTO> converter, IServiceGateway<PublicCustomer> customerServiceGateway)
         {
             repository = repos as IOrderRepository;
             productServiceGateway = gateway;
             messagePublisher = publisher;
             orderConverter = converter;
+            this.customerServiceGateway = customerServiceGateway;
         }
 
         // GET orders
@@ -63,7 +65,7 @@ namespace OrderApi.Controllers
             }
             //Order order = orderConverter.Convert(orderShared);
 
-            if (ProductItemsAvailable(order))
+            if (ProductItemsAvailable(order) && CheckValidCustomer(order))
             {
                 try
                 {
@@ -88,6 +90,24 @@ namespace OrderApi.Controllers
                 // If there are not enough product items available.
                 return StatusCode(500, "Not enough items in stock.");
             }
+        }
+
+        private bool CheckValidCustomer(OrderDTO order)
+        {
+            if (order.customerId == null)
+            {
+                return false;
+            }
+            try
+            {
+               customerServiceGateway.Get(order.customerId.Value);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
+
         }
 
         private bool ProductItemsAvailable(OrderDTO order)

@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProductApi.Data;
 using ProductApi.Models;
-using ProductApi.Services;
-using PublicModels;
+using SharedModels;
 
 namespace ProductApi.Controllers
 {
@@ -11,97 +10,79 @@ namespace ProductApi.Controllers
     [Route("[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly IProductService productService;
+        private readonly IRepository<Product> repository;
+        private readonly IConverter<Product, ProductDto> productConverter;
 
-        public ProductsController( IProductService productService)
+        public ProductsController(IRepository<Product> repos, IConverter<Product,ProductDto> converter)
         {
-           
-            this.productService = productService;
-
+            repository = repos;
+            productConverter = converter;
         }
 
         // GET products
         [HttpGet]
-        public IEnumerable<PublicProduct> Get()
+        public IEnumerable<ProductDto> Get()
         {
-            var privateList = productService.GetAll();
-            List<PublicProduct> publicList = new List<PublicProduct>();
-            foreach (var prod in privateList)
+            var productDtoList = new List<ProductDto>();
+            foreach(var product in repository.GetAll())
             {
-                PublicProduct pp = new PublicProduct
-                {
-                    Name = prod.Name, Category = prod.Category, Id = prod.Id, ItemsInStock = prod.ItemsInStock,
-                    ItemsReserved = prod.ItemsReserved, Price = prod.Price
-                };
-                publicList.Add(pp);
+                var productDto = productConverter.Convert(product);
+                productDtoList.Add(productDto);
             }
-
-            return publicList;
+            return productDtoList;
         }
 
         // GET products/5
         [HttpGet("{id}", Name="GetProduct")]
         public IActionResult Get(int id)
         {
-           var prod = productService.Get(id);
-
-            if (prod == null)
+            var item = repository.Get(id);
+            if (item == null)
             {
                 return NotFound();
             }
-
-            PublicProduct pp = new PublicProduct
-            {
-                Name = prod.Name, Category = prod.Category, Id = prod.Id, ItemsInStock = prod.ItemsInStock,
-                ItemsReserved = prod.ItemsReserved, Price = prod.Price
-            };
-            return new ObjectResult(pp);
+            var productDto = productConverter.Convert(item);
+            return new ObjectResult(productDto);
         }
 
         // POST products
         [HttpPost]
-        public IActionResult Post([FromBody]PublicProduct pubProduct)
+        public IActionResult Post([FromBody]ProductDto productDto)
         {
-            if (pubProduct == null)
+            if (productDto == null)
             {
                 return BadRequest();
             }
 
-            Product product = new Product
-            {
-                Category = pubProduct.Category, Name = pubProduct.Name, Id = pubProduct.Id,
-                ItemsInStock = pubProduct.ItemsInStock, ItemsReserved = pubProduct.ItemsReserved,
-                Price = pubProduct.Price
-            };
+            var product = productConverter.Convert(productDto);
+            var newProduct = repository.Add(product);
 
-            var newProduct = productService.Add(product);
-
-            return CreatedAtRoute("GetProduct", new { id = newProduct.Id }, newProduct);
+            return CreatedAtRoute("GetProduct", new { id = newProduct.Id },
+                    productConverter.Convert(newProduct));
         }
 
         // PUT products/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]Product pubProduct)
+        public IActionResult Put(int id, [FromBody]ProductDto productDto)
         {
-
-            if (pubProduct == null || pubProduct.Id != id)
+            if (productDto == null || productDto.Id != id)
             {
                 return BadRequest();
             }
 
-            var modifiedProduct = productService.Get(id);
+            var modifiedProduct = repository.Get(id);
 
             if (modifiedProduct == null)
             {
                 return NotFound();
             }
 
-            modifiedProduct.Name = pubProduct.Name;
-            modifiedProduct.Price = pubProduct.Price;
-            modifiedProduct.ItemsInStock = pubProduct.ItemsInStock;
-            modifiedProduct.ItemsReserved = pubProduct.ItemsReserved;
+            modifiedProduct.Name = productDto.Name;
+            modifiedProduct.Price = productDto.Price;
+            modifiedProduct.ItemsInStock = productDto.ItemsInStock;
+            modifiedProduct.ItemsReserved = productDto.ItemsReserved;
 
-            productService.Edit(modifiedProduct);
+            repository.Edit(modifiedProduct);
             return new NoContentResult();
         }
 
@@ -109,12 +90,12 @@ namespace ProductApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (productService.Get(id) == null)
+            if (repository.Get(id) == null)
             {
                 return NotFound();
             }
 
-            productService.Remove(id);
+            repository.Remove(id);
             return new NoContentResult();
         }
     }

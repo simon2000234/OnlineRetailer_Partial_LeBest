@@ -8,7 +8,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
 COPY ["CustomerAPI/CustomerAPI.csproj", "CustomerAPI/"]
-COPY ["SharedModels/SharedModels.csproj", "SharedModels/"]
+COPY ["PublicModels/PublicModels.csproj", "PublicModels/"]
 RUN dotnet restore "CustomerAPI/CustomerAPI.csproj"
 COPY . .
 WORKDIR "/src/CustomerAPI"

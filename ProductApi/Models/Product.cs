@@ -1,4 +1,5 @@
-﻿namespace ProductApi.Models
+﻿using System;
+namespace ProductApi.Models
 {
     public class Product
     {
@@ -7,6 +8,5 @@
         public decimal Price { get; set; }
         public int ItemsInStock { get; set; }
         public int ItemsReserved { get; set; }
-        public string Category { get; set; }
     }
 }

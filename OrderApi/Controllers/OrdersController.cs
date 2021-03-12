@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
-using OrderApi.Models;
-using OrderApi.Services;
-using PublicModels;
-using RestSharp;
+using OrderApi.Infrastructure;
+using SharedModels;
 
 namespace OrderApi.Controllers
 {
@@ -14,73 +11,120 @@ namespace OrderApi.Controllers
     [Route("[controller]")]
     public class OrdersController : ControllerBase
     {
-        private readonly IOrderService orderService;
+        IOrderRepository repository;
+        IServiceGateway<ProductDto> productServiceGateway;
+        IMessagePublisher messagePublisher;
 
-        public OrdersController(IOrderService service)
+        public OrdersController(IRepository<Order> repos,
+            IServiceGateway<ProductDto> gateway,
+            IMessagePublisher publisher)
         {
-            orderService = service;
+            repository = repos as IOrderRepository;
+            productServiceGateway = gateway;
+            messagePublisher = publisher;
         }
 
-        // GET: orders
+        // GET orders
         [HttpGet]
-        public IEnumerable<PublicOrder> Get()
+        public IEnumerable<Order> Get()
         {
-            var privateOrders = orderService.GetAllOrders();
-            List<PublicOrder> publicOrders = new List<PublicOrder>();
-
-            foreach (var order in privateOrders)
-            {
-                PublicOrder publicOrder = new PublicOrder
-                {
-                    Date = order.Date, Id = order.Id, ProductId = order.ProductId, Quantity = order.Quantity,
-                    Status = order.Status
-                };
-                publicOrders.Add(publicOrder);
-            }
-
-            return publicOrders;
+            return repository.GetAll();
         }
 
         // GET orders/5
         [HttpGet("{id}", Name = "GetOrder")]
         public IActionResult Get(int id)
         {
-            var item = orderService.getOrder(id);
+            var item = repository.Get(id);
             if (item == null)
             {
                 return NotFound();
             }
-
-            PublicOrder publicOrder = new PublicOrder
-            {
-                Date = item.Date,
-                Id = item.Id,
-                ProductId = item.ProductId,
-                Quantity = item.Quantity,
-                Status = item.Status
-            };
-            return new ObjectResult(publicOrder);
+            return new ObjectResult(item);
         }
 
         // POST orders
         [HttpPost]
-        public IActionResult Post([FromBody]PublicOrder order)
+        public IActionResult Post([FromBody]Order order)
         {
             if (order == null)
             {
                 return BadRequest();
             }
 
-            Order privatOrder = new Order
+            if (ProductItemsAvailable(order))
             {
-                Status = order.Status, Quantity = order.Quantity, Date = order.Date, Id = order.Id,
-                ProductId = order.ProductId
-            };
+                try
+                {
+                    // Publish OrderStatusChangedMessage. If this operation
+                    // fails, the order will not be created
+                    messagePublisher.PublishOrderStatusChangedMessage(
+                        order.customerId, order.OrderLines, "completed");
 
-            orderService.CreateOrder(privatOrder);
+                    // Create order.
+                    order.Status = Order.OrderStatus.completed;
+                    var newOrder = repository.Add(order);
+                    return CreatedAtRoute("GetOrder", new { id = newOrder.Id }, newOrder);
+                }
+                catch
+                {
+                    return StatusCode(500, "An error happened. Try again.");
+                }
+            }
+            else
+            {
+                // If there are not enough product items available.
+                return StatusCode(500, "Not enough items in stock.");
+            }
+        }
 
-            // If the order could not be created, "return no content".
-            return NoContent();
+        private bool ProductItemsAvailable(Order order)
+        {
+            foreach (var orderLine in order.OrderLines)
+            {
+                // Call product service to get the product ordered.
+                var orderedProduct = productServiceGateway.Get(orderLine.ProductId);
+                if (orderLine.Quantity > orderedProduct.ItemsInStock - orderedProduct.ItemsReserved)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // PUT orders/5/cancel
+        // This action method cancels an order and publishes an OrderStatusChangedMessage
+        // with topic set to "cancelled".
+        [HttpPut("{id}/cancel")]
+        public IActionResult Cancel(int id)
+        {
+            throw new NotImplementedException();
+
+            // Add code to implement this method.
+        }
+
+        // PUT orders/5/ship
+        // This action method ships an order and publishes an OrderStatusChangedMessage.
+        // with topic set to "shipped".
+        [HttpPut("{id}/ship")]
+        public IActionResult Ship(int id)
+        {
+            throw new NotImplementedException();
+
+            // Add code to implement this method.
+        }
+
+        // PUT orders/5/pay
+        // This action method marks an order as paid and publishes an OrderPaidMessage
+        // (which have not yet been implemented). The OrderPaidMessage should specify the
+        // Id of the customer who placed the order, and a number that indicates how many
+        // unpaid orders the customer has (not counting cancelled orders). 
+        [HttpPut("{id}/pay")]
+        public IActionResult Pay(int id)
+        {
+            throw new NotImplementedException();
+
+            // Add code to implement this method.
         }
 
     }

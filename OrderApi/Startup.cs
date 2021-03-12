@@ -1,24 +1,29 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using OrderApi.Data;
-using OrderApi.Models;
-using OrderApi.Services;
+using OrderApi.Infrastructure;
+using SharedModels;
 
 namespace OrderApi
 {
     public class Startup
     {
+        // Base URL for the product service when the solution is executed using docker-compose.
+        // The product service (running as a container) listens on this URL for HTTP requests
+        // from other services specified in the docker compose file (which in this solution is
+        // the order service).
+        Uri productServiceBaseUrl = new Uri("http://productapi/products/");
+
+        // RabbitMQ connection string (I use CloudAMQP as a RabbitMQ server).
+        // Remember to replace this connectionstring with youur own.
+        string cloudAMQPConnectionString =
+           "host=hare.rmq.cloudamqp.com;virtualHost=guest;username=guest;password=guest";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -34,14 +39,19 @@ namespace OrderApi
 
             // Register repositories for dependency injection
             services.AddScoped<IRepository<Order>, OrderRepository>();
-            services.AddScoped<IOrderService, OrderService>();
-             
+
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();
 
-            services.AddControllers();
-            services.AddSwaggerGen();
+            // Register product service gateway for dependency injection
+            services.AddSingleton<IServiceGateway<ProductDto>>(new
+                ProductServiceGateway(productServiceBaseUrl));
 
+            // Register MessagePublisher (a messaging gateway) for dependency injection
+            services.AddSingleton<IMessagePublisher>(new
+                MessagePublisher(cloudAMQPConnectionString));
+
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,7 +60,6 @@ namespace OrderApi
             // Initialize the database
             using (var scope = app.ApplicationServices.CreateScope())
             {
-                // Initialize the database
                 var services = scope.ServiceProvider;
                 var dbContext = services.GetService<OrderApiContext>();
                 var dbInitializer = services.GetService<IDbInitializer>();
@@ -61,15 +70,6 @@ namespace OrderApi
             {
                 app.UseDeveloperExceptionPage();
             }
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            });
 
             //app.UseHttpsRedirection();
 

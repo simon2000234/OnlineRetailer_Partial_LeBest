@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CustomerAPI.Data;
 using CustomerAPI.Models;
-using PublicModels;
 using CustomerAPI.Services;
+using PublicModels;
 
 namespace CustomerAPI.Controllers
 {

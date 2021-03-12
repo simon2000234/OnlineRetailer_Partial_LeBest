@@ -1,24 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using ProductApi.Data;
+using ProductApi.Infrastructure;
 using ProductApi.Models;
-using ProductApi.Services;
+using SharedModels;
 
 namespace ProductApi
 {
     public class Startup
     {
+        // RabbitMQ connection string (I use CloudAMQP as a RabbitMQ server).
+        // Remember to replace this connectionstring with your own.
+        string cloudAMQPConnectionString =
+            "host=hare.rmq.cloudamqp.com;virtualHost=guest;username=guest;password=guest";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -34,13 +34,15 @@ namespace ProductApi
 
             // Register repositories for dependency injection
             services.AddScoped<IRepository<Product>, ProductRepository>();
-            services.AddScoped<IProductService,ProductService>();
 
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();
 
+            // Register ProductConverter for dependency injection
+            services.AddSingleton<IConverter<Product, ProductDto>, ProductConverter>();
+
+
             services.AddControllers();
-            services.AddSwaggerGen();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,26 +51,20 @@ namespace ProductApi
             // Initialize the database
             using (var scope = app.ApplicationServices.CreateScope())
             {
-                // Initialize the database
                 var services = scope.ServiceProvider;
                 var dbContext = services.GetService<ProductApiContext>();
                 var dbInitializer = services.GetService<IDbInitializer>();
                 dbInitializer.Initialize(dbContext);
             }
 
+            // Create a message listener in a separate thread.
+            Task.Factory.StartNew(() =>
+                new MessageListener(app.ApplicationServices, cloudAMQPConnectionString).Start());
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            });
 
             //app.UseHttpsRedirection();
 

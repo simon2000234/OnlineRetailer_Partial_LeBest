@@ -19,6 +19,17 @@ namespace OrderApi.Infrastructure
             bus.Dispose();
         }
 
+        public void PublishPaymentRequest(decimal amount, int custId)
+        {
+            var paymentRequest = new CustomerPaymentRequestMessage
+            {
+                CustId = custId,
+                Payment = amount
+            };
+
+            bus.PubSub.Publish(paymentRequest, "PaymentRequest");
+        }
+
         public void PublishOrderStatusChangedMessage(int? customerId, IList<OrderLineDTO> orderLines, string topic)
         {
             var message = new OrderStatusChangedMessage

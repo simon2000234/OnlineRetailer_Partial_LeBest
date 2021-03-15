@@ -74,14 +74,8 @@ namespace ProductApi.Controllers
                 totalPrice += (itemPrice * orderLine.Quantity);
             }
 
-            if (totalPrice > cpm.FundsAvailable)
-            {
-                return new ObjectResult(false);
-            }
-
+            return new ObjectResult(totalPrice);
             
-            return new ObjectResult(true);
-
         }
         // PUT products/5
         [HttpPut("{id}")]

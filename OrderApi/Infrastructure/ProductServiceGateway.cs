@@ -24,13 +24,13 @@ namespace OrderApi.Infrastructure
             return orderedProduct;
         }
 
-        public bool CheckFunds(CheckPriceMessage cpm)
+        public decimal CheckFunds(CheckPriceMessage cpm)
         {
             RestClient c = new RestClient();
             c.BaseUrl = productServiceBaseUrl;
             var request = new RestRequest("CheckPrice", Method.POST, DataFormat.Json);
             request.AddJsonBody(cpm);
-            var response = c.Execute<bool>(request);
+            var response = c.Execute<decimal>(request);
             return response.Data;
         }
     }

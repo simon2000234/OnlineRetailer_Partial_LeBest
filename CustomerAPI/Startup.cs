@@ -1,9 +1,11 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CustomerAPI.Data;
+using CustomerAPI.Infrastructure;
 using CustomerAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using CustomerAPI.Services;
@@ -12,6 +14,10 @@ namespace CustomerAPI
 {
     public class Startup
     {
+
+        string cloudAMQPConnectionString =
+            "host=hawk.rmq.cloudamqp.com;virtualHost=sfqlixgf;username=sfqlixgf;password=ad-21AYORJ8Ko-2sBLQtTHRxYRa7ochd";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -49,6 +55,9 @@ namespace CustomerAPI
                 var dbInitializer = services.GetService<IDbInitializer>();
                 dbInitializer.Initialize(dbContext);
             }
+
+            Task.Factory.StartNew(() =>
+                new MessageListener(app.ApplicationServices, cloudAMQPConnectionString).Start());
 
             if (env.IsDevelopment())
             {

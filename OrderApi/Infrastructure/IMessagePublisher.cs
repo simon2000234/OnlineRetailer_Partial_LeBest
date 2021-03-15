@@ -7,5 +7,7 @@ namespace OrderApi.Infrastructure
     {
         void PublishOrderStatusChangedMessage(int? customerId,
             IList<OrderLineDTO> orderLines, string topic);
+
+        void PublishPaymentRequest(decimal amount, int custId);
     }
 }

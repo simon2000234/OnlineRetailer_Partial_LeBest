@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
@@ -34,7 +36,7 @@ namespace OrderApi.Controllers
         public IEnumerable<OrderDTO> Get()
         {
             var orderDTOList = new List<OrderDTO>();
-            foreach(var order in repository.GetAll())
+            foreach (var order in repository.GetAll())
             {
                 var orderDTO = orderConverter.Convert(order);
                 orderDTOList.Add(orderDTO);
@@ -57,7 +59,7 @@ namespace OrderApi.Controllers
 
         // POST orders
         [HttpPost]
-        public IActionResult Post([FromBody]OrderDTO order)
+        public IActionResult Post([FromBody] OrderDTO order)
         {
             if (order == null)
             {
@@ -65,8 +67,13 @@ namespace OrderApi.Controllers
             }
             //Order order = orderConverter.Convert(orderShared);
 
-            if (ProductItemsAvailable(order) && CheckValidCustomer(order))
+            if (ProductItemsAvailable(order))
             {
+                if (!CheckValidCustomer(order))
+                {
+                    return StatusCode(500, "Not enough credits or you have not paid for a previous item");
+
+                }
                 try
                 {
                     // Publish OrderStatusChangedMessage. If this operation
@@ -76,7 +83,7 @@ namespace OrderApi.Controllers
 
                     // Create order.
                     order.Status = OrderDTO.OrderStatus.completed;
-                    
+
                     var newOrder = repository.Add(orderConverter.Convert(order));
                     return CreatedAtRoute("GetOrder", new { id = newOrder.Id }, newOrder);
                 }
@@ -100,19 +107,39 @@ namespace OrderApi.Controllers
             }
             try
             {
-               var customer = customerServiceGateway.Get(order.customerId.Value);
+                var customer = customerServiceGateway.Get(order.customerId.Value);
 
-               CheckPriceMessage cpm = new CheckPriceMessage {FundsAvailable = customer.CreditStanding, OrderLines = order.OrderLines};
+                if (customer == null)
+                {
+                    return false;
+                }
 
-               var fundsAvailable = productServiceGateway.CheckFunds(cpm);
 
-               return fundsAvailable;
+                CheckPriceMessage cpm = new CheckPriceMessage { OrderLines = order.OrderLines };
 
+                var price = productServiceGateway.CheckFunds(cpm);
+
+                var fundsAvailable = customer.CreditStanding >= price;
+
+
+                var orderList = repository.GetAll();
+                bool everythingPaidFor = true;
+                foreach (var orderInList in orderList)
+                {
+                    if (orderInList.customerId != null && orderInList.customerId.Value == order.customerId.Value && orderInList.Status != Order.OrderStatus.paid)
+                    {
+                        everythingPaidFor = false;
+                    }
+                }
+
+                return fundsAvailable & everythingPaidFor;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return false;
             }
+
+
 
         }
 
@@ -139,18 +166,18 @@ namespace OrderApi.Controllers
 
             var order = repository.Get(id);
 
-            if(order == null)
+            if (order == null)
             {
                 return NotFound();
             }
 
             var newStatus = Order.OrderStatus.cancelled;
-            if(newStatus == order.Status)
+            if (newStatus == order.Status)
             {
                 return new NoContentResult();
             }
 
-            if(order.Status != Order.OrderStatus.completed)
+            if (order.Status != Order.OrderStatus.completed)
             {
                 return BadRequest();
             }
@@ -164,7 +191,8 @@ namespace OrderApi.Controllers
                 order.Status = newStatus;
                 repository.Edit(order);
                 return new NoContentResult();
-            } catch
+            }
+            catch
             {
                 return StatusCode(500, "Something went wrong :(");
             }
@@ -189,7 +217,7 @@ namespace OrderApi.Controllers
                 return new NoContentResult();
             }
 
-            if(order.Status != Order.OrderStatus.completed)
+            if (order.Status != Order.OrderStatus.completed)
             {
                 return BadRequest();
             }
@@ -203,7 +231,8 @@ namespace OrderApi.Controllers
                 order.Status = newStatus;
                 repository.Edit(order);
                 return new NoContentResult();
-            } catch
+            }
+            catch
             {
                 return StatusCode(500, "Something went wrong :(");
             }
@@ -217,9 +246,42 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/pay")]
         public IActionResult Pay(int id)
         {
-            throw new NotImplementedException();
+            var order = repository.Get(id);
 
-            // Add code to implement this method.
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            var newStatus = Order.OrderStatus.paid;
+            if (newStatus == order.Status)
+            {
+                return new NoContentResult();
+            }
+
+            if (order.Status != Order.OrderStatus.shipped)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var orderDTO = orderConverter.Convert(order);
+
+                order.Status = newStatus;
+                repository.Edit(order);
+
+                CheckPriceMessage cpm = new CheckPriceMessage { OrderLines = orderDTO.OrderLines };
+
+                var price = productServiceGateway.CheckFunds(cpm);
+                messagePublisher.PublishPaymentRequest(price, order.customerId.Value);
+                return new NoContentResult();
+            }
+            catch
+            {
+                return StatusCode(500, "Something went wrong :(");
+            }
+
         }
 
     }

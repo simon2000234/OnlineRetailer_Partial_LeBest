@@ -6,6 +6,6 @@ namespace OrderApi.Infrastructure
     {
         T Get(int id);
 
-        bool CheckFunds(CheckPriceMessage cpm);
+        decimal CheckFunds(CheckPriceMessage cpm);
     }
 }

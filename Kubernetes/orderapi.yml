@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: orderapi
-        image: henrikkyhl/orderapi:latest
+        image: simon2000234/orderapi:latest
 ---
 apiVersion: v1
 kind: Service

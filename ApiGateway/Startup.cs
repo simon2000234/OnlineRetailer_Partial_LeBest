@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using Prometheus;
 
 namespace ApiGateway
 {
@@ -43,10 +44,13 @@ namespace ApiGateway
 
             app.UseRouting();
 
+            app.UseHttpMetrics();
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapMetrics();
                 endpoints.MapControllers();
             });
 

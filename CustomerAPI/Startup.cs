@@ -9,6 +9,7 @@ using CustomerAPI.Infrastructure;
 using CustomerAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using CustomerAPI.Services;
+using Prometheus;
 
 namespace CustomerAPI
 {
@@ -78,10 +79,13 @@ namespace CustomerAPI
 
             app.UseRouting();
 
+            app.UseHttpMetrics();
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapMetrics();
                 endpoints.MapControllers();
             });
         }
